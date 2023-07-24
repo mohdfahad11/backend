@@ -1,0 +1,701 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["filteredRelationCount"]
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model addresses {
+  id                                BigInt   @id @default(autoincrement()) @db.UnsignedBigInt
+  address_type                      Int      @db.UnsignedTinyInt
+  module_type                       Int      @db.UnsignedTinyInt
+  module_id                         BigInt   @db.UnsignedBigInt
+  country_id                        Int      @db.UnsignedSmallInt
+  province_id                       Int?     @db.UnsignedSmallInt
+  city_id                           Int?     @db.UnsignedInt
+  unit_number                       String?  @db.VarChar(30)
+  street_name                       String?  @db.VarChar(100)
+  postcode                          String   @db.VarChar(255)
+  latitude                          String?  @db.VarChar(30)
+  longitude                         String?  @db.VarChar(30)
+  phone                             String?  @db.VarChar(20)
+  alternate_phone                   String?  @db.VarChar(20)
+  created_by                        BigInt   @db.UnsignedBigInt
+  created_at                        DateTime @default(now()) @db.Timestamp(0)
+  updated_by                        BigInt?  @db.UnsignedBigInt
+  updated_at                        DateTime @default(now()) @db.Timestamp(0)
+  users_addresses_created_byTousers users    @relation("addresses_created_byTousers", fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_addresses_users")
+  users_addresses_updated_byTousers users?   @relation("addresses_updated_byTousers", fields: [updated_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_addresses_users_2")
+
+  @@unique([address_type, module_type, module_id], map: "address_type_module_type_module_id")
+  @@index([created_by], map: "FK_addresses_users")
+  @@index([updated_by], map: "FK_addresses_users_2")
+}
+
+model attachments {
+  id                                  BigInt             @id @default(autoincrement()) @db.UnsignedBigInt
+  attachment_type                     Int?               @db.UnsignedTinyInt
+  module_type                         Int                @db.UnsignedTinyInt
+  module_id                           BigInt             @db.UnsignedBigInt
+  original_file_name                  String             @db.VarChar(255)
+  extension                           String             @db.VarChar(100)
+  upload_path                         String?            @db.VarChar(255)
+  mime_type                           String             @db.VarChar(100)
+  status                              attachments_status @default(Uploaded)
+  created_by                          BigInt             @db.UnsignedBigInt
+  created_at                          DateTime           @default(now()) @db.Timestamp(0)
+  updated_by                          BigInt?            @db.UnsignedBigInt
+  updated_at                          DateTime           @default(now()) @db.Timestamp(0)
+  deleted_by                          BigInt?            @db.UnsignedBigInt
+  deleted_at                          DateTime?          @db.Timestamp(0)
+  users_attachments_created_byTousers users              @relation("attachments_created_byTousers", fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_attachments_users")
+  users_attachments_updated_byTousers users?             @relation("attachments_updated_byTousers", fields: [updated_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_attachments_users_2")
+  users_attachments_deleted_byTousers users?             @relation("attachments_deleted_byTousers", fields: [deleted_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_attachments_users_3")
+
+  @@index([created_by], map: "FK_attachments_users")
+  @@index([updated_by], map: "FK_attachments_users_2")
+  @@index([deleted_by], map: "FK_attachments_users_3")
+}
+
+model cuisines {
+  id                               Int                   @id @default(autoincrement()) @db.UnsignedSmallInt
+  name                             String                @db.VarChar(100)
+  status                           Int?                  @default(1) @db.UnsignedTinyInt
+  created_by                       BigInt                @db.UnsignedBigInt
+  created_at                       DateTime              @default(now()) @db.Timestamp(0)
+  updated_by                       BigInt?               @db.UnsignedBigInt
+  updated_at                       DateTime              @default(now()) @db.Timestamp(0)
+  users_cuisines_created_byTousers users                 @relation("cuisines_created_byTousers", fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_cuisines_users")
+  users_cuisines_updated_byTousers users?                @relation("cuisines_updated_byTousers", fields: [updated_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_cuisines_users_2")
+  restaurant_cuisines              restaurant_cuisines[]
+
+  @@index([created_by], map: "FK_cuisines_users")
+  @@index([updated_by], map: "FK_cuisines_users_2")
+}
+
+model order_line_items {
+  id                                       BigInt             @id @default(autoincrement()) @db.UnsignedBigInt
+  order_id                                 BigInt             @db.UnsignedBigInt
+  table_id                                 Int?               @db.UnsignedSmallInt
+  expected_date_time                       DateTime?          @db.DateTime(0)
+  quantity                                 Int                @db.UnsignedTinyInt
+  price                                    Decimal            @db.Decimal(10, 2)
+  line_item_total                          Decimal            @db.Decimal(10, 2)
+  total_amount                             Decimal            @db.Decimal(10, 2)
+  rating                                   Decimal?           @db.Decimal(10, 2)
+  note                                     String?            @db.VarChar(500)
+  status                                   Int                @default(1) @db.UnsignedTinyInt
+  created_by                               BigInt             @db.UnsignedBigInt
+  created_at                               DateTime           @default(now()) @db.Timestamp(0)
+  updated_by                               BigInt?            @db.UnsignedBigInt
+  updated_at                               DateTime           @default(now()) @db.Timestamp(0)
+  product_id                               Int                @db.UnsignedInt
+  tag                                      String?            @db.VarChar(100)
+  orders                                   orders             @relation(fields: [order_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_order_line_items_orders")
+  products                                 products           @relation(fields: [product_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_order_line_items_products")
+  restaurant_tables                        restaurant_tables? @relation(fields: [table_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_order_line_items_restaurant_tables")
+  users_order_line_items_created_byTousers users              @relation("order_line_items_created_byTousers", fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_order_line_items_users")
+  users_order_line_items_updated_byTousers users?             @relation("order_line_items_updated_byTousers", fields: [updated_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_order_line_items_users_1")
+  order_modifiers                          order_modifiers[]
+  order_refunds                            order_refunds[]
+
+  @@index([order_id], map: "FK_order_line_items_orders")
+  @@index([table_id], map: "FK_order_line_items_restaurant_tables")
+  @@index([created_by], map: "FK_order_line_items_users")
+  @@index([updated_by], map: "FK_order_line_items_users_1")
+  @@index([product_id], map: "FK_order_line_items_products")
+}
+
+model order_payment_methods {
+  id                                            BigInt          @id @default(autoincrement()) @db.UnsignedBigInt
+  payment_method_id                             Int             @db.UnsignedSmallInt
+  order_id                                      BigInt          @db.UnsignedBigInt
+  amount_paid                                   Decimal         @db.Decimal(6, 2)
+  status                                        Int             @default(1) @db.UnsignedTinyInt
+  created_by                                    BigInt          @db.UnsignedBigInt
+  created_at                                    DateTime        @default(now()) @db.Timestamp(0)
+  updated_by                                    BigInt?         @db.UnsignedBigInt
+  updated_at                                    DateTime        @default(now()) @db.Timestamp(0)
+  orders                                        orders          @relation(fields: [order_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_order_payment_methods_orders")
+  payment_methods                               payment_methods @relation(fields: [payment_method_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_order_payment_methods_payment_methods")
+  users_order_payment_methods_created_byTousers users           @relation("order_payment_methods_created_byTousers", fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_order_payment_methods_users")
+  users_order_payment_methods_updated_byTousers users?          @relation("order_payment_methods_updated_byTousers", fields: [updated_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_order_payment_methods_users_2")
+
+  @@index([order_id], map: "FK_order_payment_methods_orders")
+  @@index([payment_method_id], map: "FK_order_payment_methods_payment_methods")
+  @@index([created_by], map: "FK_order_payment_methods_users")
+  @@index([updated_by], map: "FK_order_payment_methods_users_2")
+}
+
+model order_refunds {
+  id                                     BigInt           @id @default(autoincrement()) @db.UnsignedBigInt
+  order_line_item_id                     BigInt           @db.UnsignedBigInt
+  type                                   Int              @db.UnsignedTinyInt
+  refund_reason                          String?          @db.VarChar(500)
+  refunded_by                            BigInt           @db.UnsignedBigInt
+  status                                 Int              @default(1) @db.UnsignedTinyInt
+  created_by                             BigInt           @db.UnsignedBigInt
+  created_at                             DateTime         @default(now()) @db.Timestamp(0)
+  updated_by                             BigInt?          @db.UnsignedBigInt
+  updated_at                             DateTime         @default(now()) @db.Timestamp(0)
+  order_line_items                       order_line_items @relation(fields: [order_line_item_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_order_refunds_order_line_items")
+  refund_types                           refund_types     @relation(fields: [type], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_order_refunds_refund_types")
+  users_order_refunds_refunded_byTousers users            @relation("order_refunds_refunded_byTousers", fields: [refunded_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_order_refunds_users")
+  users_order_refunds_created_byTousers  users            @relation("order_refunds_created_byTousers", fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_order_refunds_users_2")
+  users_order_refunds_updated_byTousers  users?           @relation("order_refunds_updated_byTousers", fields: [updated_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_order_refunds_users_3")
+
+  @@index([order_line_item_id], map: "FK_order_refunds_order_line_items")
+  @@index([type], map: "FK_order_refunds_refund_types")
+  @@index([refunded_by], map: "FK_order_refunds_users")
+  @@index([created_by], map: "FK_order_refunds_users_2")
+  @@index([updated_by], map: "FK_order_refunds_users_3")
+}
+
+model order_types {
+  id          Int           @id @default(autoincrement()) @db.UnsignedTinyInt
+  type        String        @db.VarChar(200)
+  status      Int?          @default(1) @db.UnsignedTinyInt
+  orders      orders[]
+  restaurants restaurants[]
+}
+
+model orders {
+  id                             BigInt                  @id @default(autoincrement()) @db.UnsignedBigInt
+  type                           Int                     @db.UnsignedTinyInt
+  customer_name                  String?                 @db.VarChar(50)
+  customer_email                 String?                 @db.VarChar(250)
+  customer_phone_number          String?                 @db.VarChar(10)
+  ordered_at                     DateTime?               @db.DateTime(0)
+  total_amount                   Decimal?                @db.Decimal(10, 2)
+  note                           String?                 @db.VarChar(500)
+  rating                         Decimal?                @db.Decimal(10, 2)
+  status                         Int                     @default(1) @db.UnsignedTinyInt
+  ordered_by                     BigInt?                 @db.UnsignedBigInt
+  created_by                     BigInt                  @db.UnsignedBigInt
+  created_at                     DateTime                @default(now()) @db.Timestamp(0)
+  updated_by                     BigInt?                 @db.UnsignedBigInt
+  updated_at                     DateTime                @default(now()) @db.Timestamp(0)
+  discount                       Decimal?                @db.Decimal(10, 2)
+  discount_type                  Int?                    @db.UnsignedTinyInt
+  surcharge_amount               Decimal?                @db.Decimal(10, 2)
+  restaurant_id                  Int                     @db.UnsignedInt
+  delivery_time                  DateTime?               @db.Time(0)
+  waiting_time                   DateTime?               @db.Time(0)
+  discount_reason                String?                 @db.VarChar(500)
+  surcharge_type                 Int?                    @db.UnsignedTinyInt
+  discount_types                 discount_types?         @relation(fields: [discount_type], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_orders_discount_types")
+  order_types                    order_types             @relation(fields: [type], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_orders_order_types")
+  restaurants                    restaurants             @relation(fields: [restaurant_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_orders_restaurants")
+  surcharge_types                surcharge_types?        @relation(fields: [surcharge_type], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_orders_surcharge_types")
+  users_orders_ordered_byTousers users?                  @relation("orders_ordered_byTousers", fields: [ordered_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_orders_users")
+  users_orders_created_byTousers users                   @relation("orders_created_byTousers", fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_orders_users_2")
+  users_orders_updated_byTousers users?                  @relation("orders_updated_byTousers", fields: [updated_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_orders_users_3")
+  order_line_items               order_line_items[]
+  order_payment_methods          order_payment_methods[]
+
+  @@index([type], map: "FK_orders_order_types")
+  @@index([ordered_by], map: "FK_orders_users")
+  @@index([created_by], map: "FK_orders_users_2")
+  @@index([updated_by], map: "FK_orders_users_3")
+  @@index([discount_type], map: "FK_orders_discount_types")
+  @@index([restaurant_id], map: "FK_orders_restaurants")
+  @@index([surcharge_type], map: "FK_orders_surcharge_types")
+}
+
+model outlets {
+  id                              Int                  @id @default(autoincrement()) @db.UnsignedSmallInt
+  name                            String               @db.VarChar(100)
+  status                          Int?                 @default(1) @db.UnsignedTinyInt
+  created_by                      BigInt               @db.UnsignedBigInt
+  created_at                      DateTime             @default(now()) @db.Timestamp(0)
+  updated_by                      BigInt?              @db.UnsignedBigInt
+  updated_at                      DateTime             @default(now()) @db.Timestamp(0)
+  users_outlets_created_byTousers users                @relation("outlets_created_byTousers", fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_outlets_users")
+  users_outlets_updated_byTousers users?               @relation("outlets_updated_byTousers", fields: [updated_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_outlets_users_2")
+  restaurant_outlets              restaurant_outlets[]
+
+  @@index([created_by], map: "FK_outlets_users")
+  @@index([updated_by], map: "FK_outlets_users_2")
+}
+
+model payment_methods {
+  id                                      Int                     @id @default(autoincrement()) @db.UnsignedSmallInt
+  method                                  String                  @unique(map: "method") @db.VarChar(200)
+  description                             String?                 @db.VarChar(500)
+  status                                  Int                     @default(1) @db.UnsignedTinyInt
+  created_by                              BigInt                  @db.UnsignedBigInt
+  created_at                              DateTime                @default(now()) @db.Timestamp(0)
+  updated_by                              BigInt?                 @db.UnsignedBigInt
+  updated_at                              DateTime                @default(now()) @db.Timestamp(0)
+  users_payment_methods_created_byTousers users                   @relation("payment_methods_created_byTousers", fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_payment_methods_users")
+  users_payment_methods_updated_byTousers users?                  @relation("payment_methods_updated_byTousers", fields: [updated_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_payment_methods_users_2")
+  order_payment_methods                   order_payment_methods[]
+
+  @@index([created_by], map: "FK_payment_methods_users")
+  @@index([updated_by], map: "FK_payment_methods_users_2")
+}
+
+model products {
+  id                               Int                   @id @default(autoincrement()) @db.UnsignedInt
+  name                             String                @db.VarChar(250)
+  description                      String?               @db.LongText
+  quantity                         Decimal               @db.Decimal(10, 2)
+  quantity_unit                    Int                   @db.UnsignedSmallInt
+  price                            Decimal               @db.Decimal(6, 2)
+  discount_type                    Int?                  @db.UnsignedTinyInt
+  status                           Int                   @default(1) @db.UnsignedTinyInt
+  created_by                       BigInt                @db.UnsignedBigInt
+  created_at                       DateTime              @default(now()) @db.Timestamp(0)
+  updated_by                       BigInt?               @db.UnsignedBigInt
+  updated_at                       DateTime              @default(now()) @db.Timestamp(0)
+  category_id                      Int?                  @db.UnsignedSmallInt
+  barcode                          String?               @db.VarChar(50)
+  discount                         Decimal?              @db.Decimal(10, 6)
+  categories                       categories?           @relation(fields: [category_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_products_categories")
+  discount_types                   discount_types?       @relation(fields: [discount_type], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_products_discount_types")
+  quantity_units                   quantity_units        @relation(fields: [quantity_unit], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_products_quantity_units")
+  users_products_created_byTousers users                 @relation("products_created_byTousers", fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_products_users")
+  users_products_updated_byTousers users?                @relation("products_updated_byTousers", fields: [updated_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_products_users_2")
+  order_line_items                 order_line_items[]
+  restaurant_products              restaurant_products[]
+
+  @@index([quantity_unit], map: "FK_products_quantity_units")
+  @@index([created_by], map: "FK_products_users")
+  @@index([updated_by], map: "FK_products_users_2")
+  @@index([category_id], map: "FK_products_categories")
+  @@index([discount_type], map: "FK_products_discount_types")
+}
+
+model quantity_units {
+  id       Int        @id @default(autoincrement()) @db.UnsignedSmallInt
+  unit     String?    @unique(map: "unit") @db.VarChar(100)
+  status   Int        @default(1) @db.UnsignedTinyInt
+  products products[]
+}
+
+model refund_types {
+  id            Int             @id @default(autoincrement()) @db.UnsignedTinyInt
+  type          String          @db.VarChar(200)
+  status        Int             @default(1) @db.UnsignedTinyInt
+  order_refunds order_refunds[]
+}
+
+model restaurant_cuisines {
+  restaurant_id Int         @db.UnsignedInt
+  cuisine_id    Int         @db.UnsignedSmallInt
+  cuisines      cuisines    @relation(fields: [cuisine_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_restaurant_cuisines_cuisines")
+  restaurants   restaurants @relation(fields: [restaurant_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_restaurant_cuisines_restaurants")
+
+  @@id([restaurant_id, cuisine_id])
+  @@index([cuisine_id], map: "FK_restaurant_cuisines_cuisines")
+}
+
+model restaurant_outlets {
+  restaurant_id Int         @db.UnsignedInt
+  outlet_id     Int         @db.UnsignedSmallInt
+  outlets       outlets     @relation(fields: [outlet_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_restaurant_outlets_outlets")
+  restaurants   restaurants @relation(fields: [restaurant_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_restaurant_outlets_restaurants")
+
+  @@id([restaurant_id, outlet_id])
+  @@index([outlet_id], map: "FK_restaurant_outlets_outlets")
+}
+
+model restaurant_products {
+  id                                          BigInt                         @id @default(autoincrement()) @db.UnsignedBigInt
+  restaurant_id                               Int                            @db.UnsignedInt
+  product_id                                  Int                            @db.UnsignedInt
+  price                                       Decimal?                       @db.Decimal(6, 2)
+  discount                                    Int?                           @db.UnsignedInt
+  discount_type                               Int?                           @db.UnsignedTinyInt
+  status                                      Int                            @default(1) @db.UnsignedTinyInt
+  created_by                                  BigInt                         @db.UnsignedBigInt
+  created_at                                  DateTime                       @default(now()) @db.Timestamp(0)
+  updated_by                                  BigInt?                        @db.UnsignedBigInt
+  updated_at                                  DateTime                       @default(now()) @db.Timestamp(0)
+  discount_types                              discount_types?                @relation(fields: [discount_type], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_restaurant_products_discount_types")
+  products                                    products                       @relation(fields: [product_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_restaurant_products_products")
+  restaurants                                 restaurants                    @relation(fields: [restaurant_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_restaurant_products_restaurants")
+  users_restaurant_products_created_byTousers users                          @relation("restaurant_products_created_byTousers", fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_restaurant_products_users")
+  users_restaurant_products_updated_byTousers users?                         @relation("restaurant_products_updated_byTousers", fields: [updated_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_restaurant_products_users_2")
+  restaurant_product_modifiers                restaurant_product_modifiers[]
+
+  @@index([product_id], map: "FK_restaurant_products_products")
+  @@index([restaurant_id], map: "FK_restaurant_products_restaurants")
+  @@index([created_by], map: "FK_restaurant_products_users")
+  @@index([updated_by], map: "FK_restaurant_products_users_2")
+  @@index([discount_type], map: "FK_restaurant_products_discount_types")
+}
+
+model restaurant_tables {
+  id               Int                @id @default(autoincrement()) @db.UnsignedSmallInt
+  name             String             @db.VarChar(100)
+  description      String?            @db.VarChar(500)
+  status           Int                @default(1) @db.UnsignedTinyInt
+  restaurant_id    Int                @db.UnsignedInt
+  restaurants      restaurants        @relation(fields: [restaurant_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_restaurant_tables_restaurants")
+  order_line_items order_line_items[]
+
+  @@index([restaurant_id], map: "FK_restaurant_tables_restaurants")
+}
+
+model restaurant_time_slot_hours {
+  id                      Int                   @id @default(autoincrement()) @db.UnsignedSmallInt
+  restaurant_time_slot_id Int                   @db.UnsignedSmallInt
+  start_time              DateTime              @db.Time(0)
+  end_time                DateTime              @db.Time(0)
+  restaurant_time_slots   restaurant_time_slots @relation(fields: [restaurant_time_slot_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_restaurant_time_slot_hours_restaurant_time_slots")
+
+  @@index([restaurant_time_slot_id], map: "FK_restaurant_time_slot_hours_restaurant_time_slots")
+}
+
+model restaurant_time_slots {
+  id                                            Int                          @id @default(autoincrement()) @db.UnsignedSmallInt
+  restaurant_id                                 Int                          @db.UnsignedInt
+  day_of_week                                   Int                          @db.UnsignedTinyInt
+  status                                        Int                          @default(1) @db.UnsignedTinyInt
+  created_by                                    BigInt                       @db.UnsignedBigInt
+  created_at                                    DateTime                     @default(now()) @db.Timestamp(0)
+  updated_by                                    BigInt?                      @db.UnsignedBigInt
+  updated_at                                    DateTime                     @default(now()) @db.Timestamp(0)
+  restaurants                                   restaurants                  @relation(fields: [restaurant_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_restaurant_time_slots_restaurants")
+  users_restaurant_time_slots_created_byTousers users                        @relation("restaurant_time_slots_created_byTousers", fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_restaurant_time_slots_users")
+  users_restaurant_time_slots_updated_byTousers users?                       @relation("restaurant_time_slots_updated_byTousers", fields: [updated_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_restaurant_time_slots_users_2")
+  restaurant_time_slot_hours                    restaurant_time_slot_hours[]
+
+  @@index([restaurant_id], map: "FK_restaurant_time_slots_restaurants")
+  @@index([created_by], map: "FK_restaurant_time_slots_users")
+  @@index([updated_by], map: "FK_restaurant_time_slots_users_2")
+}
+
+model restaurants {
+  id                                  Int                                   @id @default(autoincrement()) @db.UnsignedInt
+  name                                String                                @db.VarChar(300)
+  type                                Int                                   @db.UnsignedTinyInt
+  status                              Int                                   @default(1) @db.UnsignedTinyInt
+  owner_id                            BigInt                                @db.UnsignedBigInt
+  created_by                          BigInt                                @db.UnsignedBigInt
+  created_at                          DateTime                              @default(now()) @db.Timestamp(0)
+  updated_by                          BigInt?                               @db.UnsignedBigInt
+  updated_at                          DateTime                              @default(now()) @db.Timestamp(0)
+  alternate_phone                     String?                               @db.VarChar(20)
+  phone                               String?                               @db.VarChar(20)
+  restaurant_unique_id                String                                @unique(map: "restaurant_unique_id") @db.VarChar(50)
+  order_types                         order_types                           @relation(fields: [type], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_restaurants_order_types")
+  users_restaurants_owner_idTousers   users                                 @relation("restaurants_owner_idTousers", fields: [owner_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_restaurants_user")
+  users_restaurants_created_byTousers users                                 @relation("restaurants_created_byTousers", fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_restaurants_user_2")
+  users_restaurants_updated_byTousers users?                                @relation("restaurants_updated_byTousers", fields: [updated_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_restaurants_user_3")
+  advance_cashes                      advance_cashes[]
+  cashups                             cashups[]
+  orders                              orders[]
+  restaurant_cuisines                 restaurant_cuisines[]
+  restaurant_outlets                  restaurant_outlets[]
+  restaurant_payment_gateway_settings restaurant_payment_gateway_settings[]
+  restaurant_products                 restaurant_products[]
+  restaurant_settings                 restaurant_settings?
+  restaurant_tables                   restaurant_tables[]
+  restaurant_time_slots               restaurant_time_slots[]
+
+  @@index([type], map: "FK_restaurants_order_types")
+  @@index([owner_id], map: "FK_restaurants_user")
+  @@index([created_by], map: "FK_restaurants_user_2")
+  @@index([updated_by], map: "FK_restaurants_user_3")
+}
+
+model users {
+  id                                                                                        BigInt                                @id @default(autoincrement()) @db.UnsignedBigInt
+  employer_id                                                                               BigInt?                               @db.UnsignedBigInt
+  role_id                                                                                   Int?                                  @default(1) @db.UnsignedTinyInt
+  name                                                                                      String                                @db.VarChar(255)
+  phone_no                                                                                  String?                               @db.VarChar(15)
+  email                                                                                     String?                               @unique(map: "email") @db.VarChar(255)
+  email_verified_at                                                                         DateTime?                             @db.Timestamp(0)
+  password                                                                                  String                                @db.VarChar(255)
+  remember_token                                                                            String?                               @db.VarChar(100)
+  created_by                                                                                BigInt?                               @db.UnsignedBigInt
+  created_at                                                                                DateTime                              @default(now()) @db.Timestamp(0)
+  updated_by                                                                                BigInt?                               @db.UnsignedBigInt
+  updated_at                                                                                DateTime                              @default(now()) @db.Timestamp(0)
+  status                                                                                    Int                                   @default(1) @db.UnsignedTinyInt
+  username                                                                                  String?                               @unique(map: "username") @db.VarChar(200)
+  dob                                                                                       DateTime?                             @db.Date
+  gender                                                                                    users_gender?
+  note                                                                                      String?                               @db.VarChar(500)
+  postcode                                                                                  String?                               @db.VarChar(20)
+  users_usersTousers_employer_id                                                            users?                                @relation("usersTousers_employer_id", fields: [employer_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_users_users")
+  users_usersTousers_created_by                                                             users?                                @relation("usersTousers_created_by", fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_users_users_2")
+  users_usersTousers_updated_by                                                             users?                                @relation("usersTousers_updated_by", fields: [updated_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_users_users_3")
+  addresses_addresses_created_byTousers                                                     addresses[]                           @relation("addresses_created_byTousers")
+  addresses_addresses_updated_byTousers                                                     addresses[]                           @relation("addresses_updated_byTousers")
+  advance_cashes_advance_cashes_active_user_idTousers                                       advance_cashes[]                      @relation("advance_cashes_active_user_idTousers")
+  advance_cashes_advance_cashes_witness_user_idTousers                                      advance_cashes[]                      @relation("advance_cashes_witness_user_idTousers")
+  advance_cashes_advance_cashes_created_byTousers                                           advance_cashes[]                      @relation("advance_cashes_created_byTousers")
+  advance_cashes_advance_cashes_updated_byTousers                                           advance_cashes[]                      @relation("advance_cashes_updated_byTousers")
+  attachments_attachments_created_byTousers                                                 attachments[]                         @relation("attachments_created_byTousers")
+  attachments_attachments_updated_byTousers                                                 attachments[]                         @relation("attachments_updated_byTousers")
+  attachments_attachments_deleted_byTousers                                                 attachments[]                         @relation("attachments_deleted_byTousers")
+  cashups_cashups_active_user_idTousers                                                     cashups[]                             @relation("cashups_active_user_idTousers")
+  cashups_cashups_witness_user_idTousers                                                    cashups[]                             @relation("cashups_witness_user_idTousers")
+  cashups_cashups_created_byTousers                                                         cashups[]                             @relation("cashups_created_byTousers")
+  cashups_cashups_updated_byTousers                                                         cashups[]                             @relation("cashups_updated_byTousers")
+  cuisines_cuisines_created_byTousers                                                       cuisines[]                            @relation("cuisines_created_byTousers")
+  cuisines_cuisines_updated_byTousers                                                       cuisines[]                            @relation("cuisines_updated_byTousers")
+  modifiers_modifiers_created_byTousers                                                     modifiers[]                           @relation("modifiers_created_byTousers")
+  modifiers_modifiers_updated_byTousers                                                     modifiers[]                           @relation("modifiers_updated_byTousers")
+  order_line_items_order_line_items_created_byTousers                                       order_line_items[]                    @relation("order_line_items_created_byTousers")
+  order_line_items_order_line_items_updated_byTousers                                       order_line_items[]                    @relation("order_line_items_updated_byTousers")
+  order_payment_methods_order_payment_methods_created_byTousers                             order_payment_methods[]               @relation("order_payment_methods_created_byTousers")
+  order_payment_methods_order_payment_methods_updated_byTousers                             order_payment_methods[]               @relation("order_payment_methods_updated_byTousers")
+  order_refunds_order_refunds_refunded_byTousers                                            order_refunds[]                       @relation("order_refunds_refunded_byTousers")
+  order_refunds_order_refunds_created_byTousers                                             order_refunds[]                       @relation("order_refunds_created_byTousers")
+  order_refunds_order_refunds_updated_byTousers                                             order_refunds[]                       @relation("order_refunds_updated_byTousers")
+  orders_orders_ordered_byTousers                                                           orders[]                              @relation("orders_ordered_byTousers")
+  orders_orders_created_byTousers                                                           orders[]                              @relation("orders_created_byTousers")
+  orders_orders_updated_byTousers                                                           orders[]                              @relation("orders_updated_byTousers")
+  outlets_outlets_created_byTousers                                                         outlets[]                             @relation("outlets_created_byTousers")
+  outlets_outlets_updated_byTousers                                                         outlets[]                             @relation("outlets_updated_byTousers")
+  payment_methods_payment_methods_created_byTousers                                         payment_methods[]                     @relation("payment_methods_created_byTousers")
+  payment_methods_payment_methods_updated_byTousers                                         payment_methods[]                     @relation("payment_methods_updated_byTousers")
+  products_products_created_byTousers                                                       products[]                            @relation("products_created_byTousers")
+  products_products_updated_byTousers                                                       products[]                            @relation("products_updated_byTousers")
+  restaurant_payment_gateway_settings_restaurant_payment_gateway_settings_created_byTousers restaurant_payment_gateway_settings[] @relation("restaurant_payment_gateway_settings_created_byTousers")
+  restaurant_payment_gateway_settings_restaurant_payment_gateway_settings_updated_byTousers restaurant_payment_gateway_settings[] @relation("restaurant_payment_gateway_settings_updated_byTousers")
+  restaurant_product_modifiers_restaurant_product_modifiers_created_byTousers               restaurant_product_modifiers[]        @relation("restaurant_product_modifiers_created_byTousers")
+  restaurant_product_modifiers_restaurant_product_modifiers_updated_byTousers               restaurant_product_modifiers[]        @relation("restaurant_product_modifiers_updated_byTousers")
+  restaurant_products_restaurant_products_created_byTousers                                 restaurant_products[]                 @relation("restaurant_products_created_byTousers")
+  restaurant_products_restaurant_products_updated_byTousers                                 restaurant_products[]                 @relation("restaurant_products_updated_byTousers")
+  restaurant_settings_restaurant_settings_created_byTousers                                 restaurant_settings[]                 @relation("restaurant_settings_created_byTousers")
+  restaurant_settings_restaurant_settings_updated_byTousers                                 restaurant_settings[]                 @relation("restaurant_settings_updated_byTousers")
+  restaurant_time_slots_restaurant_time_slots_created_byTousers                             restaurant_time_slots[]               @relation("restaurant_time_slots_created_byTousers")
+  restaurant_time_slots_restaurant_time_slots_updated_byTousers                             restaurant_time_slots[]               @relation("restaurant_time_slots_updated_byTousers")
+  restaurants_restaurants_owner_idTousers                                                   restaurants[]                         @relation("restaurants_owner_idTousers")
+  restaurants_restaurants_created_byTousers                                                 restaurants[]                         @relation("restaurants_created_byTousers")
+  restaurants_restaurants_updated_byTousers                                                 restaurants[]                         @relation("restaurants_updated_byTousers")
+  other_users_usersTousers_employer_id                                                      users[]                               @relation("usersTousers_employer_id")
+  other_users_usersTousers_created_by                                                       users[]                               @relation("usersTousers_created_by")
+  other_users_usersTousers_updated_by                                                       users[]                               @relation("usersTousers_updated_by")
+
+  @@index([employer_id], map: "FK_users_users")
+  @@index([created_by], map: "FK_users_users_2")
+  @@index([updated_by], map: "FK_users_users_3")
+}
+
+model cashups {
+  id                                   BigInt      @id @default(autoincrement()) @db.UnsignedBigInt
+  restaurant_id                        Int         @db.UnsignedInt
+  active_user_id                       BigInt?     @db.UnsignedBigInt
+  witness_user_id                      BigInt?     @db.UnsignedBigInt
+  cashup_date                          DateTime    @db.Date
+  float_amount                         Decimal     @db.Decimal(6, 2)
+  eftpos_amount                        Decimal     @db.Decimal(6, 2)
+  till_amount                          Decimal     @db.Decimal(6, 2)
+  safedrop_amount                      Decimal     @db.Decimal(6, 2)
+  expected_eftpos_amount               Decimal     @db.Decimal(6, 2)
+  expected_till_amount                 Decimal     @db.Decimal(6, 2)
+  expected_float_amount                Decimal     @db.Decimal(6, 2)
+  note                                 String?     @db.Text
+  status                               Int         @default(0) @db.TinyInt
+  cashup_done_at                       DateTime    @db.Timestamp(0)
+  created_by                           BigInt      @db.UnsignedBigInt
+  created_at                           DateTime    @default(now()) @db.Timestamp(0)
+  updated_by                           BigInt?     @db.UnsignedBigInt
+  updated_at                           DateTime    @default(now()) @db.Timestamp(0)
+  restaurants                          restaurants @relation(fields: [restaurant_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_cashups_restaurants")
+  users_cashups_active_user_idTousers  users?      @relation("cashups_active_user_idTousers", fields: [active_user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_cashups_users")
+  users_cashups_witness_user_idTousers users?      @relation("cashups_witness_user_idTousers", fields: [witness_user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_cashups_users_2")
+  users_cashups_created_byTousers      users       @relation("cashups_created_byTousers", fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_cashups_users_3")
+  users_cashups_updated_byTousers      users?      @relation("cashups_updated_byTousers", fields: [updated_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_cashups_users__4")
+
+  @@index([restaurant_id], map: "FK_cashups_restaurants")
+  @@index([active_user_id], map: "FK_cashups_users")
+  @@index([witness_user_id], map: "FK_cashups_users_2")
+  @@index([created_by], map: "FK_cashups_users_3")
+  @@index([updated_by], map: "FK_cashups_users__4")
+}
+
+model categories {
+  id       Int        @id @default(autoincrement()) @db.UnsignedSmallInt
+  category String     @db.VarChar(200)
+  status   Int        @default(1) @db.UnsignedTinyInt
+  products products[]
+}
+
+model payment_gateways {
+  id                                  Int                                   @id @default(autoincrement()) @db.UnsignedSmallInt
+  gateway                             String                                @unique(map: "gateway") @db.VarChar(150)
+  status                              Int                                   @default(1) @db.UnsignedTinyInt
+  created_at                          DateTime?                             @default(now()) @db.Timestamp(0)
+  updated_at                          DateTime?                             @default(now()) @db.Timestamp(0)
+  restaurant_payment_gateway_settings restaurant_payment_gateway_settings[]
+}
+
+model restaurant_payment_gateway_settings {
+  id                                                          Int              @id @default(autoincrement()) @db.UnsignedSmallInt
+  restaurant_id                                               Int              @db.UnsignedInt
+  payment_gateway_id                                          Int              @db.UnsignedSmallInt
+  merchant_id                                                 String?          @db.VarChar(100)
+  has_integrated_surcharge                                    Int              @default(0) @db.UnsignedTinyInt
+  has_integrated_receipt                                      Int              @default(0) @db.UnsignedTinyInt
+  status                                                      Int              @default(1) @db.UnsignedTinyInt
+  created_by                                                  BigInt           @db.UnsignedBigInt
+  created_at                                                  DateTime?        @default(now()) @db.Timestamp(0)
+  updated_by                                                  BigInt?          @db.UnsignedBigInt
+  updated_at                                                  DateTime?        @default(now()) @db.Timestamp(0)
+  payment_gateways                                            payment_gateways @relation(fields: [payment_gateway_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_restaurant_payment_gateway_settings_payment_gateways")
+  restaurants                                                 restaurants      @relation(fields: [restaurant_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_restaurant_payment_gateway_settings_restaurants")
+  users_restaurant_payment_gateway_settings_created_byTousers users            @relation("restaurant_payment_gateway_settings_created_byTousers", fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_restaurant_payment_gateway_settings_users")
+  users_restaurant_payment_gateway_settings_updated_byTousers users?           @relation("restaurant_payment_gateway_settings_updated_byTousers", fields: [updated_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_restaurant_payment_gateway_settings_users_2")
+
+  @@index([payment_gateway_id], map: "FK_restaurant_payment_gateway_settings_payment_gateways")
+  @@index([restaurant_id], map: "FK_restaurant_payment_gateway_settings_restaurants")
+  @@index([created_by], map: "FK_restaurant_payment_gateway_settings_users")
+  @@index([updated_by], map: "FK_restaurant_payment_gateway_settings_users_2")
+}
+
+model restaurant_settings {
+  id                                          Int         @id @default(autoincrement()) @db.UnsignedInt
+  restaurant_id                               Int         @unique(map: "restaurant_id") @db.UnsignedInt
+  product_vendor_name                         String?     @db.VarChar(300)
+  product_name                                String?     @db.VarChar(300)
+  product_version                             String?     @db.VarChar(30)
+  site_reference                              String?     @db.VarChar(200)
+  address_line_1                              String?     @db.VarChar(500)
+  address_line_2                              String?     @db.VarChar(500)
+  show_product_offer_popup                    Int         @default(0) @db.UnsignedTinyInt
+  gst_tax_rate                                Decimal     @db.Decimal(8, 2)
+  gst_ratio                                   Decimal     @db.Decimal(8, 2)
+  expected_floating_amount                    Decimal     @db.Decimal(8, 2)
+  status                                      Int         @default(1) @db.UnsignedTinyInt
+  created_by                                  BigInt      @db.UnsignedBigInt
+  created_at                                  DateTime    @default(now()) @db.Timestamp(0)
+  updated_by                                  BigInt?     @db.UnsignedBigInt
+  updated_at                                  DateTime    @default(now()) @db.Timestamp(0)
+  abn                                         String      @db.VarChar(50)
+  restaurants                                 restaurants @relation(fields: [restaurant_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_restaurant_settings_restaurants")
+  users_restaurant_settings_created_byTousers users       @relation("restaurant_settings_created_byTousers", fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_restaurant_settings_users")
+  users_restaurant_settings_updated_byTousers users?      @relation("restaurant_settings_updated_byTousers", fields: [updated_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_restaurant_settings_users_1")
+
+  @@index([created_by], map: "FK_restaurant_settings_users")
+  @@index([updated_by], map: "FK_restaurant_settings_users_1")
+}
+
+model roles {
+  id   Int    @id @default(autoincrement()) @db.UnsignedTinyInt
+  role String @db.VarChar(100)
+}
+
+model discount_types {
+  id                  Int                   @id @default(autoincrement()) @db.UnsignedTinyInt
+  type                String                @unique(map: "type") @db.VarChar(100)
+  orders              orders[]
+  products            products[]
+  restaurant_products restaurant_products[]
+}
+
+model modifier_categories {
+  id                Int         @id @default(autoincrement()) @db.UnsignedTinyInt
+  modifier_category String      @unique(map: "modifier_category") @db.VarChar(200)
+  status            Int         @default(1) @db.UnsignedTinyInt
+  is_mandatory      Int         @default(0) @db.UnsignedTinyInt
+  is_single_select  Int         @default(0) @db.UnsignedTinyInt
+  seq_no            Int?        @unique(map: "seq_no") @db.UnsignedInt
+  modifiers         modifiers[]
+}
+
+model modifiers {
+  id                                Int                            @id @default(autoincrement()) @db.UnsignedInt
+  modifier_category_id              Int?                           @db.UnsignedTinyInt
+  modifier                          String                         @db.VarChar(200)
+  status                            Int                            @default(1) @db.UnsignedTinyInt
+  created_by                        BigInt                         @db.UnsignedBigInt
+  created_at                        DateTime                       @default(now()) @db.Timestamp(0)
+  updated_by                        BigInt?                        @db.UnsignedBigInt
+  updated_at                        DateTime                       @default(now()) @db.Timestamp(0)
+  modifier_categories               modifier_categories?           @relation(fields: [modifier_category_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_modifiers_modifier_categories")
+  users_modifiers_created_byTousers users                          @relation("modifiers_created_byTousers", fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_modifiers_users")
+  users_modifiers_updated_byTousers users?                         @relation("modifiers_updated_byTousers", fields: [updated_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_modifiers_users_2")
+  restaurant_product_modifiers      restaurant_product_modifiers[]
+
+  @@unique([modifier_category_id, modifier], map: "modifier_category_id_modifier")
+  @@index([created_by], map: "FK_modifiers_users")
+  @@index([updated_by], map: "FK_modifiers_users_2")
+}
+
+model restaurant_product_modifiers {
+  id                                                   BigInt              @id @default(autoincrement()) @db.UnsignedBigInt
+  restaurant_product_id                                BigInt              @db.UnsignedBigInt
+  modifier_id                                          Int                 @db.UnsignedInt
+  price                                                Decimal             @db.Decimal(6, 2)
+  status                                               Int                 @default(1) @db.UnsignedTinyInt
+  created_by                                           BigInt              @db.UnsignedBigInt
+  created_at                                           DateTime            @default(now()) @db.Timestamp(0)
+  updated_by                                           BigInt?             @db.UnsignedBigInt
+  updated_at                                           DateTime            @default(now()) @db.Timestamp(0)
+  modifiers                                            modifiers           @relation(fields: [modifier_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_restaurant_product_modifiers_modifiers")
+  restaurant_products                                  restaurant_products @relation(fields: [restaurant_product_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_restaurant_product_modifiers_restaurant_modifiers")
+  users_restaurant_product_modifiers_created_byTousers users               @relation("restaurant_product_modifiers_created_byTousers", fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_restaurant_product_modifiers_users")
+  users_restaurant_product_modifiers_updated_byTousers users?              @relation("restaurant_product_modifiers_updated_byTousers", fields: [updated_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_restaurant_product_modifiers_users_2")
+  order_modifiers                                      order_modifiers[]
+
+  @@unique([restaurant_product_id, modifier_id], map: "restaurant_product_id_modifier_id")
+  @@index([modifier_id], map: "FK_restaurant_product_modifiers_modifiers")
+  @@index([created_by], map: "FK_restaurant_product_modifiers_users")
+  @@index([updated_by], map: "FK_restaurant_product_modifiers_users_2")
+}
+
+model advance_cashes {
+  id                                          BigInt      @id @default(autoincrement()) @db.UnsignedBigInt
+  restaurant_id                               Int         @db.UnsignedInt
+  date                                        DateTime    @db.DateTime(0)
+  active_user_id                              BigInt?     @db.UnsignedBigInt
+  witness_user_id                             BigInt?     @db.UnsignedBigInt
+  advance_amount                              Float
+  expected_float_amount                       Float
+  note                                        String?     @db.Text
+  created_by                                  BigInt      @db.UnsignedBigInt
+  created_at                                  DateTime?   @db.Timestamp(0)
+  updated_by                                  BigInt?     @db.UnsignedBigInt
+  updated_at                                  DateTime?   @db.Timestamp(0)
+  restaurants                                 restaurants @relation(fields: [restaurant_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_advance_cashes_restaurants")
+  users_advance_cashes_active_user_idTousers  users?      @relation("advance_cashes_active_user_idTousers", fields: [active_user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_advance_cashes_users")
+  users_advance_cashes_witness_user_idTousers users?      @relation("advance_cashes_witness_user_idTousers", fields: [witness_user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_advance_cashes_users_2")
+  users_advance_cashes_created_byTousers      users       @relation("advance_cashes_created_byTousers", fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_advance_cashes_users_3")
+  users_advance_cashes_updated_byTousers      users?      @relation("advance_cashes_updated_byTousers", fields: [updated_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_advance_cashes_users_4")
+
+  @@index([restaurant_id], map: "FK_advance_cashes_restaurants")
+  @@index([active_user_id], map: "FK_advance_cashes_users")
+  @@index([witness_user_id], map: "FK_advance_cashes_users_2")
+  @@index([created_by], map: "FK_advance_cashes_users_3")
+  @@index([updated_by], map: "FK_advance_cashes_users_4")
+}
+
+model order_modifiers {
+  id                             BigInt                       @id @default(autoincrement()) @db.UnsignedBigInt
+  restaurant_product_modifier_id BigInt                       @db.UnsignedBigInt
+  price                          Decimal                      @db.Decimal(10, 2)
+  order_line_item_id             BigInt                       @db.UnsignedBigInt
+  order_line_items               order_line_items             @relation(fields: [order_line_item_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_order_modifiers_order_line_items")
+  restaurant_product_modifiers   restaurant_product_modifiers @relation(fields: [restaurant_product_modifier_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_order_modifiers_restaurant_product_modifiers")
+
+  @@unique([restaurant_product_modifier_id, order_line_item_id], map: "restaurant_product_modifier_id_order_line_item_id")
+  @@index([order_line_item_id], map: "FK_order_modifiers_order_line_items")
+  @@index([restaurant_product_modifier_id], map: "FK_order_modifiers_restaurant_product_modifiers")
+}
+
+model surcharge_types {
+  id     Int      @id @default(autoincrement()) @db.UnsignedTinyInt
+  type   String   @db.VarChar(200)
+  orders orders[]
+}
+
+enum attachments_status {
+  Uploaded
+  Deleted
+}
+
+enum users_gender {
+  Male
+  Female
+}
